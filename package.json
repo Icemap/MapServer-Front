@@ -2,7 +2,7 @@
   "name": "map-server",
   "version": "0.1.0",
   "private": true,
-  "proxy": "http://localhost:8080/",
+  "proxy": "http://localhost:2018/",
   "dependencies": {
     "@types/leaflet": "^1.2.7",
     "antd": "^3.6.3",
