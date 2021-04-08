@@ -1,11 +1,10 @@
 import * as React from 'react';
-import { Layout, Card, Slider, Select, notification, Modal } from 'antd';
+import { Layout, Card, Slider, Select, notification, Modal, Button } from 'antd';
 import * as L from 'leaflet';
 import NetUtils from '../../utils/NetUtils';
 import ApiUtils from '../../utils/ApiUtils';
 
-interface ISettingStatus
-{
+interface ISettingStatus {
     selectRect? : IRect;
     startPointRecorded : boolean;
     startRectPoint? : L.LatLng;
@@ -18,8 +17,7 @@ interface ISettingStatus
     dialogMessage : string;
 }
 
-interface IRect
-{
+interface IRect {
     left : number;
     right : number;
     top : number;
@@ -39,15 +37,13 @@ const mapLevelMark = {
     18 : "18级",
 }
 
-class Setting extends React.Component<{}, ISettingStatus>
-{
-    public rectMap : L.Map;
-    public tileLayer : L.TileLayer;
-    public rectLayer : L.Layer;
-    public tempLayer : L.Layer;
+class Setting extends React.Component<{}, ISettingStatus> {
+    public rectMap = {} as L.Map;
+    public tileLayer = {} as L.TileLayer;
+    public rectLayer = {} as L.Layer;
+    public tempLayer = {} as L.Layer;
 
-    public constructor(props : any)
-    {
+    public constructor(props : any) {
         super(props);
         this.state = {
             startPointRecorded : false,
@@ -58,11 +54,9 @@ class Setting extends React.Component<{}, ISettingStatus>
         };
     }
 
-    public onInitMapClicked = () : void =>
-    {
+    public onInitMapClicked = () : void => {
         console.log("onInitMapClicked");
-        if(!this.state.selectRect)
-        {
+        if(!this.state.selectRect) {
             notification.error({
                 message: '矩形选择不得为空',
                 description: '地图区域矩形选择不得为空',
@@ -70,9 +64,7 @@ class Setting extends React.Component<{}, ISettingStatus>
             });
 
             return;
-        }
-        else if(!this.state.selectType || this.state.selectType.length === 0)
-        {
+        } else if(!this.state.selectType || this.state.selectType.length === 0) {
             notification.error({
                 message: '类型选择不得为空',
                 description: '地图类型选择不得为空',
@@ -85,14 +77,12 @@ class Setting extends React.Component<{}, ISettingStatus>
         this.setState({initVisable : true});
     }
 
-    public onDialogConfirm = () : void =>
-    {
+    public onDialogConfirm = () : void => {
         this.setState({dialogMessage : "开始请求……", confirmLoading : true});
         this.requestInitMap(this.state.selectLevel[0], this.state.selectLevel[1], 0);
     }
 
-    public onDialogCancel = () : void =>
-    {
+    public onDialogCancel = () : void => {
         this.setState({
             initVisable : false,
             dialogMessage : '点击"确定"开始下载地图切片,待出现"完成"字样前不要关闭网页。',
@@ -100,10 +90,8 @@ class Setting extends React.Component<{}, ISettingStatus>
         });
     }
 
-    public requestInitMap = (currentLevel : number, endLevel : number, typeIndex : number) : void =>
-    {
-        if(this.state.selectRect && this.state.selectType)
-        {
+    public requestInitMap = (currentLevel : number, endLevel : number, typeIndex : number) : void => {
+        if(this.state.selectRect && this.state.selectType) {
             let formData = new FormData();
             formData.set("left", this.state.selectRect.left.toString());
             formData.set("right", this.state.selectRect.right.toString());
@@ -115,32 +103,24 @@ class Setting extends React.Component<{}, ISettingStatus>
             NetUtils.post(
                 ApiUtils.INIT_MAP,
                 formData,
-                (result : any) =>
-                {
-                    if(this.state.selectType)
-                    {
+                (result : any) => {
+                    if(this.state.selectType) {
                         let dialogMessage = this.state.selectType[typeIndex] 
                             + "类型的第" + currentLevel + "级切片请求完成";
 
                         this.setState({dialogMessage})
                         console.log(currentLevel, endLevel , typeIndex);
-                        if(this.state.selectType.length - 1 === typeIndex)
-                        {
-                            if(currentLevel < endLevel)
-                            {
+                        if(this.state.selectType.length - 1 === typeIndex) {
+                            if(currentLevel < endLevel) {
                                 // typeIndex 归零, currentLevel += 1
                                 this.requestInitMap(currentLevel + 1 , endLevel , 0);
-                            }
-                            else
-                            {
+                            } else {
                                 this.setState({
                                     dialogMessage : "切片请求完成",
                                     confirmLoading : false
                                 })
                             }
-                        }
-                        else
-                        {
+                        } else {
                             // typeIndex + 1
                             this.requestInitMap(currentLevel , endLevel , typeIndex + 1);
                         }
@@ -150,18 +130,15 @@ class Setting extends React.Component<{}, ISettingStatus>
         }
     }
 
-    public onMapLevelChange = (levelArea : [number, number]) : void =>
-    {
+    public onMapLevelChange = (levelArea : [number, number]) : void => {
         this.setState({selectLevel : levelArea});
     }
 
-    public onMapTypeChange = (selectType : string[]) : void =>
-    {
+    public onMapTypeChange = (selectType : string[]) : void => {
         this.setState({selectType});
     }
 
-    public mapInit = (latlng : L.LatLng) =>
-    {
+    public mapInit = (latlng : L.LatLng) => {
         this.rectMap = L.map('rectMap').setView(latlng, 16);
         this.tileLayer = L.tileLayer(
             'http://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', 
@@ -171,17 +148,17 @@ class Setting extends React.Component<{}, ISettingStatus>
             });
         this.tileLayer.addTo(this.rectMap);
 
-        this.rectMap.on('mouseup', (event: L.LocationEvent) => {this.onMapClick(event)});
-        this.rectMap.on('mousemove', (event: L.LocationEvent) => {this.onMapMouseMove(event)});
+        this.rectMap.on('mouseup', (event: L.LeafletEvent) => {this.onMapClick(event as L.LocationEvent)});
+        this.rectMap.on('mousemove', (event: L.LeafletEvent) => {this.onMapMouseMove(event as L.LocationEvent)});
+
+        console.log("init map");
     }
 
-    public onMapClick = (e : L.LocationEvent) =>
-    {
+    public onMapClick = (e : L.LocationEvent) => {
         console.log(e);
 
         // 记录起始点
-        if(!this.state.startPointRecorded)
-        {
+        if(!this.state.startPointRecorded) {
             this.setState({
                 startRectPoint : e.latlng,
                 startPointRecorded : true
@@ -191,10 +168,8 @@ class Setting extends React.Component<{}, ISettingStatus>
             {
                 this.rectMap.removeLayer(this.rectLayer);
             }
-        }
-        // 绘制
-        else
-        {
+        } else {
+            // 绘制
             console.log("end-click");
             if(this.state.startRectPoint)
             {
@@ -231,10 +206,8 @@ class Setting extends React.Component<{}, ISettingStatus>
         }
     }
 
-    public onMapMouseMove = (e : L.LocationEvent) =>
-    {
-        if(!this.state.startRectPoint)
-        {
+    public onMapMouseMove = (e : L.LocationEvent) => {
+        if(!this.state.startRectPoint) {
             return;
         }
 
@@ -245,8 +218,7 @@ class Setting extends React.Component<{}, ISettingStatus>
         points.push(new L.LatLng(e.latlng.lat, this.state.startRectPoint.lng));
         points.push(this.state.startRectPoint);
 
-        if(this.tempLayer) 
-        {
+        if(this.tempLayer) {
             this.rectMap.removeLayer(this.tempLayer);
         }
 
@@ -254,33 +226,30 @@ class Setting extends React.Component<{}, ISettingStatus>
         this.rectMap.addLayer(this.tempLayer);
     }
 
-    public locationSuccess = (position : Position) => {
+    public locationSuccess = (position : GeolocationPosition) => {
+        console.log("locationSuccess");
+        
         let latitude = position.coords.latitude; 
         let longitude = position.coords.longitude; 
         return this.mapInit(new L.LatLng(latitude, longitude));
     };
 
     public locationError = () => {
+        console.log("locationError");
         this.mapInit(new L.LatLng(23.141716164703613,113.29651951789857));
     };
 
     // Life Cycle
-    public componentDidMount()
-    {
-        if (navigator.geolocation) 
-        {
-            navigator.geolocation.
-                getCurrentPosition(this.locationSuccess, this.locationError);
-        } 
-        else 
-        {
+    componentDidMount() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(this.locationSuccess, this.locationError);
+        } else {
             let latlng : L.LatLng = new L.LatLng(23.141716164703613,113.29651951789857);
             this.mapInit(latlng);
         }
     }
 
-    public render()
-    {
+    public render() {
         return (
             <Layout
                 style={{
@@ -297,17 +266,18 @@ class Setting extends React.Component<{}, ISettingStatus>
                 </Modal>
 
                     <div 
-                    id='rectMap' 
-                    style={{
-                        width : "50vw" , 
-                        height : "85vh", 
-                        margin : "10px"
-                        }}/>
+                        id='rectMap' 
+                        style={{
+                            width : "50vw" , 
+                            height : "85vh", 
+                            margin : "10px"
+                            }}
+                        />
 
                     <Layout style={{justifyContent : "space-between"}}>
                         <Card 
                             title={<strong style={{fontSize : 20}}>地图参数</strong>}
-                            extra={<a onClick={this.onInitMapClicked}>下载瓦片</a>}
+                            extra={<Button type="link" onClick={this.onInitMapClicked}>下载瓦片</Button>}
                             style={{ width: "45vw", margin:10 }}>
 
                             <p><strong style={{margin : 5, fontSize : 15}}> 地图等级 </strong></p>
@@ -327,25 +297,24 @@ class Setting extends React.Component<{}, ISettingStatus>
                                 onChange={this.onMapTypeChange}
                                 style={{ width : "40vw" , alignSelf : "center"}}
                                 >
-                                <Select.Option key="google-satellite">Google卫星</Select.Option>
-                                <Select.Option key="google-image">Google矢量</Select.Option>
-                                <Select.Option key="google-terrain">Google地形</Select.Option>
+                                <Select.Option value="google-satellite">Google卫星</Select.Option>
+                                <Select.Option value="google-image">Google矢量</Select.Option>
+                                <Select.Option value="google-terrain">Google地形</Select.Option>
 
-                                <Select.Option key="amap-satellite">高德卫星</Select.Option>
-                                <Select.Option key="amap-image">高德矢量</Select.Option>
-                                <Select.Option key="amap-cover">高德标签</Select.Option>
+                                <Select.Option value="amap-satellite">高德卫星</Select.Option>
+                                <Select.Option value="amap-image">高德矢量</Select.Option>
+                                <Select.Option value="amap-cover">高德标签</Select.Option>
 
-                                <Select.Option key="tianditu-satellite">天地图卫星</Select.Option>
-                                <Select.Option key="tianditu-image">天地图矢量</Select.Option>
-                                <Select.Option key="tianditu-cover">天地图标签</Select.Option>
+                                <Select.Option value="tianditu-satellite">天地图卫星</Select.Option>
+                                <Select.Option value="tianditu-image">天地图矢量</Select.Option>
+                                <Select.Option value="tianditu-cover">天地图标签</Select.Option>
                             </Select>
                         </Card>
                         <Card 
                             title={<strong style={{fontSize : 20}}>矩形经纬度显示</strong>}
                             style={{ width: "45vw", margin: 10 }}>
                             {
-                                this.state.selectRect ? 
-                                (
+                                this.state.selectRect ? (
                                     <Layout 
                                         style={{
                                             background : "#00000000",
@@ -356,8 +325,7 @@ class Setting extends React.Component<{}, ISettingStatus>
                                         <p>左：{this.state.selectRect.left}</p>
                                         <p>右：{this.state.selectRect.right}</p>
                                     </Layout>
-                                ) :
-                                (
+                                ) : (
                                     <Layout 
                                         style={{
                                             background : "#00000000",

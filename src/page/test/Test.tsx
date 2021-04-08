@@ -12,8 +12,8 @@ interface ITestState
 
 class Test extends React.Component<{} , ITestState>
 {
-    public testMap : L.Map;
-    public tileLayer : L.TileLayer;
+    public testMap = {} as L.Map;
+    public tileLayer = {} as L.TileLayer;
 
     public constructor(props : any)
     {
@@ -163,7 +163,7 @@ class Test extends React.Component<{} , ITestState>
         );
     }
 
-    public locationSuccess = (position : Position) => {
+    public locationSuccess = (position : GeolocationPosition) => {
         let latitude = position.coords.latitude; 
         let longitude = position.coords.longitude; 
         return this.mapInit(new L.LatLng(latitude, longitude));
@@ -173,15 +173,12 @@ class Test extends React.Component<{} , ITestState>
         this.mapInit(new L.LatLng(23.141716164703613,113.29651951789857));
     };
 
-    public randerRadio = () : React.ReactNode[] =>
-    {
+    public randerRadio = () : React.ReactNode[] => {
         let radioList : React.ReactNode[] = [];
 
-        if(this.state.mapConfig)
-        {
+        if(this.state.mapConfig) {
             this.state.mapConfig.forEach((value : string[],
-                 key : string , map : Map<string , string[]>) =>
-                {
+                key : string , map : Map<string , string[]>) => {
                     radioList.push(
                         <Radio 
                             style={{
@@ -217,8 +214,7 @@ class Test extends React.Component<{} , ITestState>
     {
         if (navigator.geolocation) 
         {
-            navigator.geolocation.
-                getCurrentPosition(this.locationSuccess, this.locationError);
+            navigator.geolocation.getCurrentPosition(this.locationSuccess, this.locationError);
         } 
         else 
         {
